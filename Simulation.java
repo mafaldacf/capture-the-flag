@@ -31,6 +31,10 @@ public class Simulation {
     }
 
     public void init(int gridSize, char flagPlacementType, int numBlueAgents, int numRedAgents, int numFlagsPerTeam) {
+        System.out.println("[DEBUG] grid_size = " + gridSize + "; flag_placement_type = " + flagPlacementType);
+        System.out.println("[DEBUG] num_blue_agents = " + numBlueAgents + "; num_red_agents = " + numRedAgents);
+        System.out.println();
+
         this.grid = new Grid(gridSize);
         this.numFlagsPerTeam = numFlagsPerTeam;
         grid.init();
@@ -44,6 +48,7 @@ public class Simulation {
 
         System.out.println("[INFO] round = " + round + "; score (blue, red) = (" + blueScore + ", " + redScore + ")");
         this.grid.printBoard();
+        System.out.println();
 
         while (true) {
             round++;
