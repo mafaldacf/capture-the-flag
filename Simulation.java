@@ -52,9 +52,9 @@ public class Simulation {
 
         while (true) {
             round++;
-            moveDetected = false;
-            moveTeam(blueAgents, blueFlagPositions, blueScore);
-            moveTeam(redAgents,  redFlagPositions,  redScore);
+            this.moveDetected = false;
+            moveTeam(blueAgents, blueFlagPositions);
+            moveTeam(redAgents, redFlagPositions);
             checkDeadlock();
             //this.grid.print(round, blueScore, redScore);
             //Thread.sleep(200);
@@ -73,7 +73,7 @@ public class Simulation {
 
     // sanity check
     public void checkDeadlock() {
-        if (!moveDetected) {
+        if (!this.moveDetected) {
             boolean anyFrozen = true;
             for (Agent a : blueAgents) {
                 if (a.cooldown > 0) { anyFrozen = false; break; }
@@ -100,7 +100,7 @@ public class Simulation {
         if (agent.cooldown > 0) {
             agent.tickCooldown();
             if (agent.cooldown == 0) {
-                this.grid.setCellAgent(agent.x, agent.y, agent.isBlue());
+                this.grid.markCellWithAgent(agent.x, agent.y, agent.isBlue());
                 return true;
             }
             return false;
@@ -108,40 +108,44 @@ public class Simulation {
         return true;
     }
 
-    public void moveTeam(List<Agent> team, List<int[]> flagPositions, int score) {
+    public void moveTeam(List<Agent> team, List<int[]> flagPositions) {
         for (Agent agent : team) {
             boolean canMove = checkCooldown(agent);
             if (!canMove) continue; // skip this agent
 
             int[] flagPos = findNearestPosition(agent.x, agent.y, flagPositions);
             if (flagPos == null) continue;
-            int tx = flagPos[0]; 
-            int ty = flagPos[1];
 
-            int[] next = bfsNextStep(agent.x, agent.y, tx, ty);
+            int[] next = bfsNextStep(agent.x, agent.y, flagPos[0], flagPos[1]);
             if (next == null || this.grid.cellHasAgent(next[0], next[1])) continue;
-            moveDetected = true;
+            
+            this.grid.markCellWithAgentTrace(agent.x, agent.y, agent.isBlue()); // mark agent traces
+            agent.setPosition(next[0], next[1]);
+            this.moveDetected = true;
 
-            this.grid.setCellTrace(agent.x, agent.y, agent.isBlue());
-
-            agent.x = next[0]; 
-            agent.y = next[1];
-
-            Iterator<int[]> pickIt = flagPositions.iterator();
-            while (pickIt.hasNext()) {
-                int[] p = pickIt.next();
-                if (p[0] == agent.x && p[1] == agent.y) {
-                    pickIt.remove();
-                    if (agent.isBlue()) blueScore++; else redScore++;
-                    agent.setCooldown();
-                    break;
-                }
-            }
+            tryCaptureFlag(agent, flagPositions);
             
             if (agent.hasCooldown()) {
-                this.grid.setCellAgentCaptured(agent.x, agent.y, agent.isBlue());
+                this.grid.markCellWithAgentOnCooldown(agent.x, agent.y, agent.isBlue());
             } else {
-                this.grid.setCellAgent(agent.x, agent.y, agent.isBlue());
+                this.grid.markCellWithAgent(agent.x, agent.y, agent.isBlue());
+            }
+        }
+    }
+
+    public void tryCaptureFlag(Agent agent, List<int[]> flagPositions) {
+        Iterator<int[]> it = flagPositions.iterator();
+        while (it.hasNext()) {
+            int[] p = it.next();
+            if (agent.isAtPosition(p[0], p[1])) {
+                it.remove();
+                if (agent.isBlue()) {
+                    this.blueScore++;
+                } else {
+                    this.redScore++;
+                }
+                agent.setCooldown();
+                break;
             }
         }
     }
@@ -175,7 +179,9 @@ public class Simulation {
 
         // helpers for reconstructing path and return next step
         Map<Integer, Integer> parent = new HashMap<>();
-        parent.put(sx * gridSize + sy, -1);
+        int key = positionToKey(gridSize, sx, sy);
+        int value = -1;
+        parent.put(key, value);
 
         while (!q.isEmpty()) {
             int[] c = q.poll();
@@ -186,6 +192,10 @@ public class Simulation {
                 int ny = c[1] + dir[1];
 
                 if (this.grid.inBounds(nx, ny) && !visited[nx][ny]) {
+                    // agent cannot step into cell if:
+                    // 1. there is as a flag and it is not the target one
+                    // 2. there is an agent
+                    // 3. there is an obstacle
                     if (this.grid.cellHasFlag(nx, ny) && (nx != tx || ny != ty) 
                         || this.grid.cellHasAgent(nx, ny) 
                         || this.grid.cellHasObstacle(nx, ny)) 
@@ -194,8 +204,8 @@ public class Simulation {
                     q.add(new int[]{nx, ny});
                     visited[nx][ny] = true;
 
-                    int key = nx * gridSize + ny;
-                    int value = c[0] * gridSize + c[1];
+                    key = positionToKey(gridSize, nx, ny);
+                    value = positionToKey(gridSize, c[0], c[1]);
                     parent.put(key, value);
                 }
 
@@ -205,14 +215,26 @@ public class Simulation {
             return null; // no path found
 
         // go backwards on constructed path and extract next move
-        int key = tx * gridSize + ty;
+        key = positionToKey(gridSize, tx, ty);
+        key = findRootPosition(parent, key);
+        int[] next = keyToPosition(gridSize, key);
+        return next;
+    }
+
+    private static int positionToKey(int gridSize, int x, int y) {
+        return x * gridSize + y;
+    }
+
+    private static int[] keyToPosition(int gridSize, int key) {
+        return new int[]{key / gridSize, key % gridSize};
+    }
+
+    private static int findRootPosition(Map<Integer, Integer> parent, int key) {
         int p = parent.get(key);
         while (parent.get(p) != -1) { 
             key = p; 
             p = parent.get(key); 
         }
-        int nx = key / gridSize;
-        int ny = key % gridSize;
-        return new int[]{nx, ny};
+        return key;
     }
 }

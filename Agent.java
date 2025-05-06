@@ -11,6 +11,15 @@ public class Agent {
         this.blue = isBlue; 
     }
 
+    public void setPosition(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    public boolean isAtPosition(int x, int y) {
+        return this.x == x && this.y == y;
+    }
+
     public boolean isBlue() {
         return this.blue;
     }

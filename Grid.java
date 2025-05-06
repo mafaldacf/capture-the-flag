@@ -18,15 +18,15 @@ public class Grid {
     static final String EMPTY               = ". ";
     static final String OBSTACLE            = "# ";
 
-    static final String BLUE_AGENT          = BLUE_COLOR + "B " + RESET;
-    static final String BLUE_AGENT_CAPTURED = BLUE_COLOR + "B*" + RESET;
-    static final String BLUE_FLAG           = BLUE_COLOR + "X " + RESET;
-    static final String BLUE_TRACE          = BLUE_COLOR + "• " + RESET;
+    static final String BLUE_AGENT              = BLUE_COLOR + "B " + RESET;
+    static final String BLUE_AGENT_ON_COOLDOWN  = BLUE_COLOR + "B*" + RESET;
+    static final String BLUE_FLAG               = BLUE_COLOR + "X " + RESET;
+    static final String BLUE_TRACE              = BLUE_COLOR + "• " + RESET;
 
-    static final String RED_AGENT           = RED_COLOR + "R " + RESET;
-    static final String RED_AGENT_CAPTURED  = RED_COLOR + "R*" + RESET;
-    static final String RED_FLAG            = RED_COLOR + "Y " + RESET;
-    static final String RED_TRACE           = RED_COLOR + "• " + RESET;
+    static final String RED_AGENT               = RED_COLOR + "R " + RESET;
+    static final String RED_AGENT_ON_COOLDOWN   = RED_COLOR + "R*" + RESET;
+    static final String RED_FLAG                = RED_COLOR + "Y " + RESET;
+    static final String RED_TRACE               = RED_COLOR + "• " + RESET;
 
     static final int[][] DIRECTIONS = {{-1,0},{1,0},{0,-1},{0,1}};
 
@@ -37,8 +37,8 @@ public class Grid {
         BLUE_FLAG,
         RED_AGENT,
         BLUE_AGENT,
-        RED_AGENT_CAPTURED,
-        BLUE_AGENT_CAPTURED,
+        RED_AGENT_ON_COOLDOWN,
+        BLUE_AGENT_ON_COOLDOWN,
         RED_TRACE,
         BLUE_TRACE
     }
@@ -222,7 +222,7 @@ public class Grid {
 
     public boolean cellHasAgent(int x, int y) {
         switch (this.cells[x][y]) {
-            case BLUE_AGENT, BLUE_AGENT_CAPTURED, RED_AGENT, RED_AGENT_CAPTURED: return true;
+            case BLUE_AGENT, BLUE_AGENT_ON_COOLDOWN, RED_AGENT, RED_AGENT_ON_COOLDOWN: return true;
             default: return false;
         }
     }
@@ -235,15 +235,15 @@ public class Grid {
         return this.cells[x][y] == CellType.BLUE_FLAG || this.cells[x][y] == CellType.RED_FLAG;
     }
 
-    public void setCellAgent(int x, int y, boolean isBlue) {
+    public void markCellWithAgent(int x, int y, boolean isBlue) {
         cells[x][y] = isBlue ? CellType.BLUE_AGENT : CellType.RED_AGENT;
     }
 
-    public void setCellAgentCaptured(int x, int y, boolean isBlue) {
-        cells[x][y] = isBlue ? CellType.BLUE_AGENT_CAPTURED : CellType.RED_AGENT_CAPTURED;
+    public void markCellWithAgentOnCooldown(int x, int y, boolean isBlue) {
+        cells[x][y] = isBlue ? CellType.BLUE_AGENT_ON_COOLDOWN : CellType.RED_AGENT_ON_COOLDOWN;
     }
 
-    public void setCellTrace(int x, int y, boolean isBlue) {
+    public void markCellWithAgentTrace(int x, int y, boolean isBlue) {
         cells[x][y] = isBlue ? CellType.BLUE_TRACE : CellType.RED_TRACE;
     }
 
@@ -258,11 +258,11 @@ public class Grid {
                     case EMPTY:                 System.out.print(EMPTY); break;
                     case OBSTACLE:              System.out.print(OBSTACLE); break;
                     case BLUE_AGENT:            System.out.print(BLUE_AGENT); break;
-                    case BLUE_AGENT_CAPTURED:   System.out.print(BLUE_AGENT_CAPTURED); break;
+                    case BLUE_AGENT_ON_COOLDOWN:   System.out.print(BLUE_AGENT_ON_COOLDOWN); break;
                     case BLUE_FLAG:             System.out.print(BLUE_FLAG); break;
                     case BLUE_TRACE:            System.out.print(BLUE_TRACE); break;
                     case RED_AGENT:             System.out.print(RED_AGENT); break;
-                    case RED_AGENT_CAPTURED:    System.out.print(RED_AGENT_CAPTURED); break;
+                    case RED_AGENT_ON_COOLDOWN:    System.out.print(RED_AGENT_ON_COOLDOWN); break;
                     case RED_FLAG:              System.out.print(RED_FLAG); break;
                     case RED_TRACE:             System.out.print(RED_TRACE); break;
                 }
